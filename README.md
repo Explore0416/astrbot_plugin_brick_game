@@ -2,7 +2,7 @@
 
 适用于 NapCat / OneBot v11（AstrBot `aiocqhttp` 适配器）的 QQ 群小游戏插件。
 
-当前版本：**1.1.1**
+当前版本：**1.2.0**
 
 ## 功能
 
@@ -35,21 +35,32 @@ data/plugins/astrbot_plugin_brick_game/
 ├── main.py
 ├── metadata.yaml
 ├── _conf_schema.json
-└── README.md
+├── README.md
+└── pages/
+    └── settings/
+        ├── index.html
+        ├── app.js
+        └── style.css
 ```
 
 然后重启 AstrBot 或重载插件。
 
 ## 设置面板
 
-AstrBot 只有在**插件成功加载**且插件根目录存在 `_conf_schema.json` 时，才会在插件卡片上显示设置按钮。
+AstrBot 只有在**插件成功加载**且插件根目录存在 `_conf_schema.json` 时，才会在插件卡片上显示设置齿轮。
 
-如果安装后没有设置面板，请检查：
+本插件同时提供两种设置入口：
+
+1. 插件卡片的设置齿轮（`_conf_schema.json`）：AstrBot 原生配置面板。
+2. 插件卡片进入详情页后的页面入口（`pages/settings`）：本插件提供的可视化设置页，可一次编辑全部参数。
+
+如果安装后没有设置入口，请检查：
 
 1. 插件目录是否为 `data/plugins/astrbot_plugin_brick_game/`；
 2. `main.py`、`metadata.yaml`、`_conf_schema.json` 是否直接在该目录；
-3. AstrBot 日志中是否有 `Failed to import plugin` 或 `_conf_schema.json is not valid JSON`；
-4. 插件是否被禁用，重载后是否显示“已启用”。
+3. `pages/settings/index.html` 是否存在；
+4. AstrBot 日志中是否有 `Failed to import plugin` 或 `_conf_schema.json is not valid JSON`；
+5. 插件是否被禁用，重载后是否显示“已启用”。
 
 ## 指令
 

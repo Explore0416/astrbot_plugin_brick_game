@@ -40,8 +40,17 @@ try:
 except ImportError:
     _astrbot_register = None
 
+try:
+    from astrbot.api.web import error_response as _web_error_response
+    from astrbot.api.web import json_response as _web_json_response
+    from astrbot.api.web import request as _web_request
+except ImportError:  # 旧版 AstrBot 没有插件页 Web API
+    _web_error_response = None
+    _web_json_response = None
+    _web_request = None
+
 PLUGIN_NAME = "astrbot_plugin_brick_game"
-PLUGIN_VERSION = "1.1.1"
+PLUGIN_VERSION = "1.2.0"
 PLUGIN_REPO = "https://github.com/Explore0416/astrbot_plugin_brick_game"
 STATE_FILE = "state.json"
 SAVE_DEBOUNCE_SECONDS = 10
@@ -251,9 +260,191 @@ class BrickGame(Star):
         self.store = BrickStore(_get_data_dir() / STATE_FILE)
         self._lock = asyncio.Lock()
         self._quota_cache: dict[str, tuple[float, int]] = {}
+        self._register_settings_page_api()
 
     async def terminate(self) -> None:
         await self.store.close()
+
+    def _register_settings_page_api(self) -> None:
+        """注册插件设置页使用的 Web API。"""
+
+        if _web_json_response is None or _web_request is None:
+            return
+        register_web_api = getattr(self.context, "register_web_api", None)
+        if not callable(register_web_api):
+            return
+        try:
+            register_web_api(
+                f"/{PLUGIN_NAME}/settings",
+                self.page_settings,
+                ["GET", "POST"],
+                "砖厂插件设置",
+            )
+        except Exception:
+            logger.warning("注册砖厂设置页 API 失败", exc_info=True)
+
+    def _page_config_snapshot(self) -> dict[str, Any]:
+        return {
+            "sign_points": self._sign_points(),
+            "brick_messages": self._brick_messages(),
+            "max_bricks": self._max_bricks(),
+            "brick_start_cost_points": self._brick_cost(),
+            "mute_seconds": self._mute_seconds(),
+            "leaderboard_size": self._leaderboard_size(),
+            "timezone": self._timezone_name(),
+            "protect_admins": self._protect_admins(),
+            "notify_on_complete": self._notify_on_complete(),
+            "xiaoning_enabled": self._exchange_enabled(),
+            "xiaoning_exchange_mode": self._exchange_mode(),
+            "xiaoning_base_url": self._cfg_str("xiaoning_base_url", ""),
+            "xiaoning_access_token": "",
+            "access_token_configured": bool(self._xiaoning_token()),
+            "xiaoning_fixed_user_id": self._fixed_xiao_user_id(),
+            "xiaoning_points_per_balance": self._points_per_balance(),
+            "xiaoning_points_per_reset_card": self._points_per_reset_card(),
+            "xiaoning_daily_balance_limit": self._daily_balance_limit(),
+            "xiaoning_monthly_balance_limit": self._monthly_balance_limit(),
+            "xiaoning_daily_reset_card_limit": self._daily_reset_card_limit(),
+            "xiaoning_monthly_reset_card_limit": self._monthly_reset_card_limit(),
+            "xiaoning_quota_per_unit": self._quota_per_unit_override(),
+            "xiaoning_timeout_seconds": self._xiaoning_timeout(),
+        }
+
+    def _validate_page_config(self, raw: Any) -> dict[str, Any]:
+        if not isinstance(raw, dict):
+            raise ValueError("配置参数必须是对象")
+
+        updates: dict[str, Any] = {}
+        int_specs = {
+            "sign_points": (0, 1000),
+            "brick_messages": (1, 1000),
+            "max_bricks": (1, 100),
+            "brick_start_cost_points": (0, 1_000_000),
+            "mute_seconds": (1, MAX_BAN_SECONDS),
+            "leaderboard_size": (1, 50),
+            "xiaoning_fixed_user_id": (0, 10**12),
+            "xiaoning_points_per_balance": (1, 1_000_000_000),
+            "xiaoning_points_per_reset_card": (1, 1_000_000_000),
+            "xiaoning_daily_balance_limit": (0, 100000),
+            "xiaoning_monthly_balance_limit": (0, 1_000_000),
+            "xiaoning_daily_reset_card_limit": (0, 1000),
+            "xiaoning_monthly_reset_card_limit": (0, 10000),
+            "xiaoning_quota_per_unit": (0, 10**12),
+            "xiaoning_timeout_seconds": (3, 120),
+        }
+        bool_keys = {
+            "protect_admins",
+            "notify_on_complete",
+            "xiaoning_enabled",
+        }
+
+        for key, (minimum, maximum) in int_specs.items():
+            if key not in raw:
+                continue
+            value = raw[key]
+            if isinstance(value, bool):
+                raise ValueError(f"{key} 必须是整数")
+            try:
+                parsed = int(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{key} 必须是整数") from exc
+            if parsed < minimum or parsed > maximum:
+                raise ValueError(f"{key} 必须在 {minimum}-{maximum} 之间")
+            updates[key] = parsed
+
+        for key in bool_keys:
+            if key not in raw:
+                continue
+            value = raw[key]
+            if isinstance(value, bool):
+                updates[key] = value
+            elif isinstance(value, (int, float)):
+                updates[key] = bool(value)
+            elif isinstance(value, str):
+                updates[key] = value.strip().lower() in {
+                    "1",
+                    "true",
+                    "yes",
+                    "on",
+                    "是",
+                    "开启",
+                }
+            else:
+                raise ValueError(f"{key} 必须是布尔值")
+
+        if "timezone" in raw:
+            value = raw["timezone"]
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError("timezone 不能为空")
+            updates["timezone"] = value.strip()
+
+        if "xiaoning_exchange_mode" in raw:
+            value = raw["xiaoning_exchange_mode"]
+            if not isinstance(value, str) or value not in {
+                "balance",
+                "reset_card",
+                "both",
+            }:
+                raise ValueError("兑换类型必须是 balance/reset_card/both")
+            updates["xiaoning_exchange_mode"] = value
+
+        if "xiaoning_base_url" in raw:
+            value = raw["xiaoning_base_url"]
+            if not isinstance(value, str):
+                raise ValueError("Base URL 必须是字符串")
+            updates["xiaoning_base_url"] = value.strip()[:500]
+
+        if "xiaoning_access_token" in raw:
+            value = raw["xiaoning_access_token"]
+            if not isinstance(value, str):
+                raise ValueError("访问令牌必须是字符串")
+            value = value.strip()
+            if value:
+                updates["xiaoning_access_token"] = value[:2000]
+
+        return updates
+
+    async def page_settings(self):
+        """插件设置页的读取与保存接口。"""
+
+        if _web_request is None or _web_json_response is None:
+            return None
+
+        if _web_request.method.upper() == "GET":
+            return _web_json_response(
+                {
+                    "success": True,
+                    "config": self._page_config_snapshot(),
+                },
+            )
+
+        payload = await _web_request.json(default={})
+        raw_config = payload.get("config") if isinstance(payload, dict) else None
+        try:
+            updates = self._validate_page_config(raw_config)
+        except ValueError as exc:
+            return _web_error_response(str(exc), status_code=400)
+
+        if updates:
+            self.config.update(updates)
+            save_config = getattr(self.config, "save_config", None)
+            if callable(save_config):
+                try:
+                    save_config()
+                except Exception:
+                    logger.error("保存砖厂插件配置失败", exc_info=True)
+                    return _web_error_response(
+                        "配置已更新到内存，但写入配置文件失败，请查看日志",
+                        status_code=500,
+                    )
+
+        return _web_json_response(
+            {
+                "success": True,
+                "message": "设置已保存",
+                "config": self._page_config_snapshot(),
+            },
+        )
 
     # ------------------------------------------------------------------
     # 配置读取

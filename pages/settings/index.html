@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>砖厂游戏设置</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">AstrBot Plugin</p>
+          <h1>砖厂游戏设置</h1>
+          <p class="subtitle">
+            在这里统一调整签到、烧砖、拍人和 Xiaoning-API 积分兑换参数。
+            保存后立即生效，无需重启插件。
+          </p>
+        </div>
+        <span id="token-badge" class="badge">读取中</span>
+      </header>
+
+      <div id="notice" class="notice hidden" role="status"></div>
+
+      <form id="config-form" novalidate>
+        <div id="groups"></div>
+
+        <footer class="actions">
+          <button type="button" id="reload-btn" class="btn ghost">重新读取</button>
+          <button type="submit" id="save-btn" class="btn primary">保存设置</button>
+        </footer>
+      </form>
+
+      <p class="footnote">
+        提示：重置卡发放接口在 Xiaoning-API 当前版本未声明新版 PAT 路由 scope；
+        若使用新版 <code>nap_</code> 令牌失败，请改用旧版管理员访问令牌，或在服务端补充路由权限。
+      </p>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
