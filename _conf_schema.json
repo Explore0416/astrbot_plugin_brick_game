@@ -1,0 +1,209 @@
+{
+  "sign_points": {
+    "description": "每次签到获得的积分",
+    "type": "int",
+    "default": 10,
+    "slider": {
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
+  },
+  "brick_messages": {
+    "description": "烧成一块砖所需的群友消息数",
+    "type": "int",
+    "default": 10,
+    "hint": "只统计其他群成员的消息，砖主自己的消息不计入。",
+    "slider": {
+      "min": 1,
+      "max": 100,
+      "step": 1
+    }
+  },
+  "max_bricks": {
+    "description": "每人最多同时拥有的砖块数",
+    "type": "int",
+    "default": 3,
+    "hint": "可用砖块和正在烧的砖块合计不能超过此上限。",
+    "slider": {
+      "min": 1,
+      "max": 10,
+      "step": 1
+    }
+  },
+  "brick_start_cost_points": {
+    "description": "开始烧砖消耗的积分",
+    "type": "int",
+    "default": 0,
+    "hint": "0 表示免费烧砖；设置大于 0 后，积分不足将无法开始烧砖。",
+    "slider": {
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
+  },
+  "mute_seconds": {
+    "description": "拍人成功后的禁言时长（秒）",
+    "type": "int",
+    "default": 60,
+    "hint": "需要机器人在群内拥有管理员权限。QQ 群禁言上限一般为 30 天。",
+    "slider": {
+      "min": 10,
+      "max": 2592000,
+      "step": 10
+    }
+  },
+  "protect_admins": {
+    "description": "禁止拍群主和管理员",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后可防止普通成员消耗砖块去禁言管理员；机器人本身也无法禁言群主或其他管理员。",
+    "obvious_hint": true
+  },
+  "notify_on_complete": {
+    "description": "砖烧好时在群里 @ 砖主",
+    "type": "bool",
+    "default": true
+  },
+  "leaderboard_size": {
+    "description": "积分榜显示人数",
+    "type": "int",
+    "default": 10,
+    "slider": {
+      "min": 1,
+      "max": 50,
+      "step": 1
+    }
+  },
+  "timezone": {
+    "description": "签到日期使用的时区",
+    "type": "string",
+    "default": "Asia/Shanghai",
+    "hint": "每天按此时区判断是否已签到，建议保持 Asia/Shanghai。"
+  },
+  "xiaoning_enabled": {
+    "description": "开启积分兑换余额/重置卡",
+    "type": "bool",
+    "default": false,
+    "hint": "关闭后兑换指令会提示未开启；绑定账号、查询仍可使用。",
+    "obvious_hint": true
+  },
+  "xiaoning_exchange_mode": {
+    "description": "允许兑换的类型",
+    "type": "string",
+    "default": "both",
+    "options": [
+      "balance",
+      "reset_card",
+      "both"
+    ],
+    "labels": [
+      "仅添加余额",
+      "仅重置卡",
+      "余额和重置卡"
+    ],
+    "hint": "选择“仅添加余额”或“仅重置卡”时，另一类兑换指令会被拒绝。"
+  },
+  "xiaoning_base_url": {
+    "description": "Xiaoning-API Base URL（不含 /v1）",
+    "type": "string",
+    "default": "",
+    "hint": "例如 https://api.example.com。不要带 /v1；插件会自动去掉末尾的 /v1 或 /api。",
+    "obvious_hint": true
+  },
+  "xiaoning_fixed_user_id": {
+    "description": "统一兑换账号的用户ID（可选）",
+    "type": "int",
+    "default": 0,
+    "hint": "大于 0 时，所有用户的余额/重置卡都发放到该 Xiaoning 用户ID，无需个人绑定；为 0 时由每位用户发送“绑定账号 <用户ID>”自行绑定。"
+  },
+  "xiaoning_access_token": {
+    "description": "Xiaoning-API 访问令牌（管理员权限）",
+    "type": "string",
+    "default": "",
+    "secret": true,
+    "hint": "新版 PAT 加余额需要 user:write scope。重置卡发放接口在当前 Xiaoning-API 版本未声明 PAT scope，若提示 ACCESS_TOKEN_ROUTE_UNDECLARED，请使用旧版管理员访问令牌或更新服务端路由权限。",
+    "obvious_hint": true
+  },
+  "xiaoning_points_per_balance": {
+    "description": "兑换 1 额度消耗的积分",
+    "type": "int",
+    "default": 10,
+    "hint": "按面板显示的“额度”计算；实际写入 Xiaoning-API 时会乘以 1 额度对应的 quota 值（默认自动换算）。",
+    "slider": {
+      "min": 1,
+      "max": 1000,
+      "step": 1
+    }
+  },
+  "xiaoning_points_per_reset_card": {
+    "description": "兑换 1 张重置卡消耗的积分",
+    "type": "int",
+    "default": 100,
+    "slider": {
+      "min": 1,
+      "max": 10000,
+      "step": 1
+    }
+  },
+  "xiaoning_daily_balance_limit": {
+    "description": "每人每日最多兑换多少额度",
+    "type": "int",
+    "default": 1,
+    "hint": "0 表示不限制。",
+    "slider": {
+      "min": 0,
+      "max": 1000,
+      "step": 1
+    }
+  },
+  "xiaoning_monthly_balance_limit": {
+    "description": "每人每月最多兑换多少额度",
+    "type": "int",
+    "default": 10,
+    "hint": "0 表示不限制；每日和每月限制会同时生效。",
+    "slider": {
+      "min": 0,
+      "max": 10000,
+      "step": 1
+    }
+  },
+  "xiaoning_daily_reset_card_limit": {
+    "description": "每人每日最多兑换多少张重置卡",
+    "type": "int",
+    "default": 1,
+    "hint": "0 表示不限制。",
+    "slider": {
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
+  },
+  "xiaoning_monthly_reset_card_limit": {
+    "description": "每人每月最多兑换多少张重置卡",
+    "type": "int",
+    "default": 5,
+    "hint": "0 表示不限制；每日和每月限制会同时生效。",
+    "slider": {
+      "min": 0,
+      "max": 1000,
+      "step": 1
+    }
+  },
+  "xiaoning_quota_per_unit": {
+    "description": "1 额度对应的 API quota 值",
+    "type": "int",
+    "default": 0,
+    "hint": "0 表示自动从 Xiaoning-API 的 /api/status 按面板展示模式（USD/CNY/自定义货币/TOKENS）换算 1 额度对应的 quota；读取失败时会拒绝兑换并要求手动填写。New API 默认 USD 模式通常为 500000。"
+  },
+  "xiaoning_timeout_seconds": {
+    "description": "请求 Xiaoning-API 的超时时间（秒）",
+    "type": "int",
+    "default": 15,
+    "slider": {
+      "min": 3,
+      "max": 60,
+      "step": 1
+    }
+  }
+}
