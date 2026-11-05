@@ -15,6 +15,7 @@ desc: |
   - 数据保存在 data/plugin_data/astrbot_plugin_brick_game/state.json
 version: 1.1.0
 author: TraeCode
+repo: https://github.com/Explore0416/astrbot_plugin_brick_game
 support_platforms:
   - aiocqhttp
 tags:

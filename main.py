@@ -19,12 +19,30 @@ from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
-from astrbot.api import AstrBotConfig, logger
+from astrbot.api import logger
+
+try:
+    from astrbot.api import AstrBotConfig
+except ImportError:  # 兼容旧版 AstrBot
+    AstrBotConfig = dict
+
 from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.message_components import At, Plain, Reply
-from astrbot.api.star import Context, Star, StarTools
+from astrbot.api.star import Context, Star
+
+try:
+    from astrbot.api.star import StarTools
+except ImportError:  # 旧版没有 StarTools 时使用插件数据目录回退逻辑
+    StarTools = None
+
+try:
+    from astrbot.api.star import register as _astrbot_register
+except ImportError:
+    _astrbot_register = None
 
 PLUGIN_NAME = "astrbot_plugin_brick_game"
+PLUGIN_VERSION = "1.1.0"
+PLUGIN_REPO = "https://github.com/Explore0416/astrbot_plugin_brick_game"
 STATE_FILE = "state.json"
 SAVE_DEBOUNCE_SECONDS = 10
 MAX_BAN_SECONDS = 30 * 24 * 60 * 60
@@ -186,6 +204,39 @@ def _get_data_dir() -> Path:
         return path
 
 
+def _register_plugin(*args: Any, **kwargs: Any):
+    """兼容旧版 AstrBot：旧版需要 register 装饰器，新版会自动注册。"""
+
+    if _astrbot_register is None:
+        return lambda cls: cls
+    return _astrbot_register(*args, **kwargs)
+
+
+def _regex_filter(pattern: str, *, priority: int = 0):
+    """兼容不支持 priority 参数的旧版 AstrBot。"""
+
+    try:
+        return filter.regex(pattern, priority=priority)
+    except TypeError:
+        return filter.regex(pattern)
+
+
+def _event_message_type_filter(event_type: Any, *, priority: int = 0):
+    """兼容不支持 priority 参数的旧版 AstrBot。"""
+
+    try:
+        return filter.event_message_type(event_type, priority=priority)
+    except TypeError:
+        return filter.event_message_type(event_type)
+
+
+@_register_plugin(
+    PLUGIN_NAME,
+    "TraeCode",
+    "砖厂游戏：签到、烧砖、拍人、Xiaoning-API 积分兑换",
+    PLUGIN_VERSION,
+    PLUGIN_REPO,
+)
 class BrickGame(Star):
     """砖厂游戏：签到、烧砖、拍人、积分兑换。
 
@@ -753,7 +804,7 @@ class BrickGame(Star):
     # ------------------------------------------------------------------
 
     @filter.platform_adapter_type(filter.PlatformAdapterType.AIOCQHTTP)
-    @filter.regex(COMMAND_PATTERN, priority=100)
+    @_regex_filter(COMMAND_PATTERN, priority=100)
     async def on_game_command(self, event: AstrMessageEvent):
         """处理签到、烧砖、拍人、查询和帮助指令，触发时优先于 AI 回复。"""
         sender_id = str(event.get_sender_id() or "")
@@ -1741,7 +1792,7 @@ class BrickGame(Star):
     # ------------------------------------------------------------------
 
     @filter.platform_adapter_type(filter.PlatformAdapterType.AIOCQHTTP)
-    @filter.event_message_type(
+    @_event_message_type_filter(
         filter.EventMessageType.GROUP_MESSAGE,
         priority=-10,
     )
