@@ -41,7 +41,7 @@ except ImportError:
     _astrbot_register = None
 
 PLUGIN_NAME = "astrbot_plugin_brick_game"
-PLUGIN_VERSION = "1.1.0"
+PLUGIN_VERSION = "1.1.1"
 PLUGIN_REPO = "https://github.com/Explore0416/astrbot_plugin_brick_game"
 STATE_FILE = "state.json"
 SAVE_DEBOUNCE_SECONDS = 10
@@ -651,7 +651,7 @@ class BrickGame(Star):
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "User-Agent": "AstrBot-BrickGame/1.1",
+            "User-Agent": f"AstrBot-BrickGame/{PLUGIN_VERSION}",
         }
         if auth:
             headers["Authorization"] = f"Bearer {token}"

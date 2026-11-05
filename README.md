@@ -2,7 +2,7 @@
 
 适用于 NapCat / OneBot v11（AstrBot `aiocqhttp` 适配器）的 QQ 群小游戏插件。
 
-当前版本：**1.1.0**
+当前版本：**1.1.1**
 
 ## 功能
 

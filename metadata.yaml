@@ -13,7 +13,7 @@ desc: |
   - 兑换前用户使用“绑定账号 <用户ID>”绑定 Xiaoning-API 账号，管理员也可设置统一兑换账号
   - 指令直接匹配，触发时优先于 AI 回复，不会继续调用大模型
   - 数据保存在 data/plugin_data/astrbot_plugin_brick_game/state.json
-version: 1.1.0
+version: 1.1.1
 author: TraeCode
 repo: https://github.com/Explore0416/astrbot_plugin_brick_game
 support_platforms:
